@@ -1,0 +1,89 @@
+{% extends "base.html" %}{% load task_extras %}
+{% block style %}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chip{display:inline-flex;align-items:center;gap:7px;text-decoration:none;padding:5px 12px;border:1px solid var(--line);border-radius:999px;font-size:14px;background:var(--panel)}
+.chip .n{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.chip.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.quick{display:grid;grid-template-columns:1fr 150px auto;gap:8px;padding:10px;margin-bottom:6px}
+.quick input{border:0;background:transparent;padding:6px 4px}
+.quick input:focus{outline:none}
+.hint{font-size:12.5px;margin:0 0 4px 2px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;margin:14px 0;font-size:14px;border-radius:10px;border:1px dashed var(--line)}
+.bar.warn{border-style:solid;background:var(--warn-bg);color:var(--warn);border-color:transparent}
+ul.list{list-style:none;margin:0;padding:0}
+.task{display:grid;grid-template-columns:28px 104px 1fr;gap:4px 10px;padding:11px 14px;border-bottom:1px solid var(--line);align-items:start}
+.task:last-child{border-bottom:0}
+.tick{margin:2px 0 0}
+.tick input{width:17px;height:17px;accent-color:var(--accent);cursor:pointer}
+.when{font-size:13px;padding-top:1px;color:var(--ink)}
+.late{display:block;font-size:11.5px;color:var(--warn)}
+.line{line-height:1.75}
+.line > *{margin-right:6px;vertical-align:baseline}
+.line .tag{vertical-align:1px}
+.title{text-decoration:none;word-break:break-word}
+.title:hover{text-decoration:underline}
+.milestone .title{font-weight:700}
+.star{color:#c98a00}
+.tag.err{color:var(--warn);border-color:var(--warn)}
+.notes{margin:6px 0 0;font:12.5px/1.5 var(--mono);color:var(--muted);white-space:pre-wrap;word-break:break-all;background:var(--bg);border-radius:6px;padding:6px 9px}
+.done .title{text-decoration:line-through;color:var(--muted)}
+.sec-overdue h2{color:var(--warn)}
+.empty{padding:40px 16px;text-align:center}
+details summary{cursor:pointer;color:var(--muted);font-size:13px;margin:28px 0 8px}
+@media (max-width:640px){
+  .quick{grid-template-columns:1fr auto}
+  .quick select{grid-column:1 / -1;order:3}
+  .task{grid-template-columns:24px 1fr}
+  .when{grid-column:2}
+  .body{grid-column:2}
+}
+{% endblock %}
+{% block content %}
+<div class="chips">
+  <a class="chip{% if not selected %} on{% endif %}" href="{% url 'dashboard' %}">全部 <span class="n">{{ open_total_all|default:"" }}</span></a>
+  {% for c in clients %}
+  <a class="chip{% if selected_client.pk == c.pk %} on{% endif %}" href="?client={{ c.pk }}"><span class="dot" style="background:{{ c.hex }}"></span>{{ c.name }} <span class="n">{{ c.open_count }}</span></a>
+  {% endfor %}
+  {% if no_client_count %}<a class="chip{% if selected == 'none' %} on{% endif %}" href="?client=none">不分客戶 <span class="n">{{ no_client_count }}</span></a>{% endif %}
+</div>
+
+<form method="post" action="{% url 'quick_add' %}">
+  {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+  <div class="quick panel">
+    <input name="text" placeholder="快速新增：10/30 交報告　或　11/7(9800 上線)" autocomplete="off">
+    <select name="client" aria-label="客戶">
+      <option value="">（不分客戶）</option>
+      {% for c in clients %}<option value="{{ c.name }}" {% if selected_client.pk == c.pk %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+    </select>
+    <button class="btn primary">新增</button>
+  </div>
+</form>
+<p class="hint muted">一次要加很多筆？到 <a href="{% url 'paste' %}">貼上</a> 整段 notepad。</p>
+
+{% if not gcal_enabled %}
+  <div class="bar"><span class="muted">Google Calendar 還沒設定，待辦只存在網站裡。設定方式見 README。</span></div>
+{% elif sync_pending %}
+  <form method="post" action="{% url 'resync' %}" class="bar warn">{% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <span>{{ sync_pending }} 筆還沒寫進 Google Calendar</span><button class="btn small">重新同步</button>
+  </form>
+{% endif %}
+
+{% if open_total == 0 %}
+  <div class="panel empty muted">{% if selected_client %}{{ selected_client.name }} 目前沒有待辦。{% else %}目前沒有待辦。到「貼上」把 notepad 的清單貼進來吧。{% endif %}</div>
+{% endif %}
+
+{% for key, label, items in sections %}{% if items %}
+<section class="sec-{{ key }}">
+  <h2>{{ label }} <span class="n">{{ items|length }}</span></h2>
+  <ul class="list panel">{% for t in items %}{% include "tasks/_task_row.html" %}{% endfor %}</ul>
+</section>
+{% endif %}{% endfor %}
+
+{% if done_items %}
+<details>
+  <summary>最近完成（{{ done_items|length }}）</summary>
+  <ul class="list panel">{% for t in done_items %}{% include "tasks/_task_row.html" with key="done" %}{% endfor %}</ul>
+</details>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block style %}
+.rows{display:grid;gap:0}
+.row{display:grid;grid-template-columns:26px minmax(0,1fr) 150px 130px 44px;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);align-items:start}
+.row:last-child{border-bottom:0}
+.row.head{font-size:12px;color:var(--muted);font-weight:600;padding-top:8px;padding-bottom:8px}
+.row input[type=checkbox]{width:17px;height:17px;margin-top:9px;accent-color:var(--accent)}
+.row textarea{margin-top:6px;font-size:12.5px;min-height:34px}
+.row .ms{display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--muted);padding-top:4px}
+.row.off{opacity:.45}
+.new{font-size:13px;margin:0 0 12px}
+.sticky{position:sticky;bottom:0;background:var(--bg);padding:14px 0;margin-top:12px;border-top:1px solid var(--line)}
+@media (max-width:700px){
+  .row{grid-template-columns:26px 1fr 1fr}
+  .row .t{grid-column:2 / -1}
+  .row .c{grid-column:2}
+  .row .d{grid-column:3}
+  .row .ms{grid-column:2;flex-direction:row;gap:6px}
+  .row.head{display:none}
+}
+{% endblock %}
+{% block content %}
+<h1>檢查一下再建立 <span class="muted mono" style="font-size:14px">{{ items|length }} 筆</span></h1>
+{% if new_clients %}<p class="new muted">會新增客戶：{{ new_clients|join:"、" }}（之後可到「客戶」設日曆顏色）</p>{% endif %}
+<form method="post" action="{% url 'paste_confirm' %}">{% csrf_token %}
+  <input type="hidden" name="count" value="{{ items|length }}">
+  <datalist id="client-list">{% for n in client_names %}<option value="{{ n }}">{% endfor %}</datalist>
+  <div class="rows panel">
+    <div class="row head"><span></span><span>事項／備註</span><span>客戶</span><span>日期</span><span>里程碑</span></div>
+    {% for it in items %}
+    <div class="row">
+      <input type="checkbox" name="include-{{ forloop.counter0 }}" checked aria-label="要建立" onchange="this.closest('.row').classList.toggle('off',!this.checked)">
+      <div class="t">
+        <input name="title-{{ forloop.counter0 }}" value="{{ it.title }}" maxlength="200" aria-label="事項">
+        {% if it.notes %}<textarea name="notes-{{ forloop.counter0 }}" rows="{% if it.notes|length > 80 %}3{% else %}2{% endif %}" aria-label="備註">{{ it.notes }}</textarea>
+        {% else %}<textarea name="notes-{{ forloop.counter0 }}" rows="1" placeholder="備註" aria-label="備註"></textarea>{% endif %}
+      </div>
+      <input class="c" name="client-{{ forloop.counter0 }}" value="{{ it.client }}" list="client-list" placeholder="不分客戶" aria-label="客戶">
+      <input class="d" type="date" name="date-{{ forloop.counter0 }}" value="{{ it.due_date|date:'Y-m-d' }}" aria-label="日期">
+      <label class="ms"><input type="checkbox" name="milestone-{{ forloop.counter0 }}" {% if it.is_milestone %}checked{% endif %} style="margin-top:6px"><span>★</span></label>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="sticky actions">
+    <button class="btn primary">建立 {{ items|length }} 筆待辦</button>
+    <a class="btn" href="javascript:history.back()">回去改原文</a>
+    <span class="muted" style="font-size:13px">有日期的會同時加到 Google Calendar</span>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% load task_extras %}
+<li class="task{% if t.done %} done{% endif %}{% if t.is_milestone %} milestone{% endif %}">
+  <form method="post" action="{% url 'task_toggle' t.pk %}" class="tick">
+    {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <input type="checkbox" aria-label="完成" {% if t.done %}checked{% endif %} onchange="this.form.submit()">
+  </form>
+  <div class="when mono">
+    {% if t.due_date %}{{ t.due_date|zhdate }}{% else %}<span class="muted">—</span>{% endif %}
+    {% if key == "overdue" %}<span class="late">{{ t.due_date|days_from:today|cut:"-" }} 天前</span>{% endif %}
+  </div>
+  <div class="body">
+    <div class="line">
+      {% if t.client and not selected_client %}<span class="tag"><span class="dot" style="background:{{ t.client.hex }}"></span>{{ t.client.name }}</span>{% endif %}
+      {% if t.is_milestone %}<span class="star" title="里程碑">★</span>{% endif %}
+      {% if t.recurring_id %}<span class="tag" title="每月循環">↻ 每月</span>{% endif %}
+      <a class="title" href="{% url 'task_edit' t.pk %}?next={{ request.get_full_path|urlencode }}">{{ t.title }}</a>
+      {% if t.sync_error %}<span class="tag err" title="{{ t.sync_error }}">日曆未同步</span>{% endif %}
+    </div>
+    {% if t.notes %}<pre class="notes">{{ t.notes }}</pre>{% endif %}
+  </div>
+</li>

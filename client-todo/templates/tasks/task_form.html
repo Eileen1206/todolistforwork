@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{% if task %}編輯待辦{% else %}新增待辦{% endif %}</h1>
+{% if task.recurring %}<p class="muted" style="font-size:14px">↻ 這是「{{ task.recurring.title }}」每月循環的其中一次。</p>{% endif %}
+{% if task.sync_error %}<p class="msgs"><span style="display:block;padding:9px 12px;border-radius:8px;background:var(--warn-bg);color:var(--warn);font-size:13px">日曆同步失敗：{{ task.sync_error }}</span></p>{% endif %}
+<form method="post" class="form-grid panel" style="padding:18px;max-width:640px">{% csrf_token %}
+  <input type="hidden" name="next" value="{{ back }}">
+  {{ form.non_field_errors }}
+  <div>{{ form.title.label_tag }}{{ form.title }}{{ form.title.errors }}</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div>{{ form.client.label_tag }}{{ form.client }}</div>
+    <div>{{ form.due_date.label_tag }}{{ form.due_date }}{{ form.due_date.errors }}</div>
+  </div>
+  <div>{{ form.notes.label_tag }}{{ form.notes }}</div>
+  <div class="check">{{ form.is_milestone }}{{ form.is_milestone.label_tag }}</div>
+  <div class="check">{{ form.done }}{{ form.done.label_tag }}</div>
+  <div class="actions"><button class="btn primary">儲存</button><a class="btn" href="{{ back }}">取消</a></div>
+</form>
+{% if task %}
+<form method="post" action="{% url 'task_delete' task.pk %}" style="margin-top:14px" onsubmit="return confirm('確定刪除？日曆上的事件也會一起刪掉。')">{% csrf_token %}
+  <input type="hidden" name="next" value="{{ back }}">
+  <button class="btn danger small">刪除{% if task.recurring %}這一次{% endif %}</button>
+</form>
+{% endif %}
+{% endblock %}

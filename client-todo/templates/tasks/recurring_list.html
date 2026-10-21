@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="actions" style="justify-content:space-between;margin-bottom:14px">
+  <h1 style="margin:0">每月循環</h1>
+  {% if has_clients %}<a class="btn primary" href="{% url 'recurring_new' %}">＋ 新增</a>{% endif %}
+</div>
+<p class="muted" style="font-size:14px;margin-top:0">每個月固定要做的事。網站會自動在待辦裡放這個月和下個月那一次；Google Calendar 上是一個每月重複的事件。</p>
+{% if not has_clients %}
+  <div class="panel" style="padding:20px">先到 <a href="{% url 'client_list' %}">客戶</a> 新增至少一個客戶。</div>
+{% elif items %}
+<div class="panel"><table class="plain">
+  <tr><th>客戶</th><th>事項</th><th>哪天</th><th>狀態</th><th></th></tr>
+  {% for rt in items %}
+  <tr>
+    <td><span class="tag"><span class="dot" style="background:{{ rt.client.hex }}"></span>{{ rt.client.name }}</span></td>
+    <td>{{ rt.title }}{% if rt.notes %}<div class="muted mono" style="font-size:12px;white-space:pre-wrap">{{ rt.notes|truncatechars:120 }}</div>{% endif %}</td>
+    <td class="mono">{{ rt.day_label }}</td>
+    <td>{% if not rt.active %}<span class="muted">停用</span>{% elif rt.sync_error %}<span class="tag err" style="color:var(--warn)" title="{{ rt.sync_error }}">日曆未同步</span>{% else %}啟用{% endif %}</td>
+    <td style="text-align:right"><a class="btn small" href="{% url 'recurring_edit' rt.pk %}">編輯</a></td>
+  </tr>
+  {% endfor %}
+</table></div>
+{% else %}
+  <div class="panel muted" style="padding:28px;text-align:center">還沒有每月循環的事項。</div>
+{% endif %}
+{% endblock %}

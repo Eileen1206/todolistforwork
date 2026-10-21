@@ -1,0 +1,85 @@
+{% load static %}<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>{% block title %}客戶待辦{% endblock %}</title>
+<style>
+:root{
+  --bg:#f6f5f2; --panel:#ffffff; --ink:#1d1f23; --muted:#6b6f76; --line:#e4e2dc;
+  --accent:#2f5d50; --accent-ink:#ffffff; --warn:#b4441f; --warn-bg:#fbeee8; --ok-bg:#e9f2ee;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#141517; --panel:#1c1e21; --ink:#e7e5e0; --muted:#9a9ea5; --line:#2c2f33;
+         --accent:#7fb8a4; --accent-ink:#0f1a16; --warn:#f08a62; --warn-bg:#2d1d16; --ok-bg:#16241f; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px 64px}
+header.top{display:flex;align-items:center;gap:20px;padding:14px 0;border-bottom:1px solid var(--line);margin-bottom:20px;flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.02em;text-decoration:none;display:flex;align-items:center;gap:8px}
+.brand i{width:10px;height:10px;border-radius:2px;background:var(--accent);display:inline-block}
+nav{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+nav a{text-decoration:none;color:var(--muted);padding:4px 10px;border-radius:6px;font-size:14px}
+nav a.on,nav a:hover{color:var(--ink);background:var(--panel)}
+.logout{margin-left:auto}
+.logout button{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;cursor:pointer}
+h1{font-size:20px;margin:0 0 14px}
+h2{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:28px 0 8px;display:flex;align-items:center;gap:8px}
+h2 .n{font-family:var(--mono);font-weight:500}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.msgs{list-style:none;padding:0;margin:0 0 16px;display:grid;gap:6px}
+.msgs li{padding:9px 12px;border-radius:8px;background:var(--ok-bg);font-size:14px}
+.msgs li.warning,.msgs li.error{background:var(--warn-bg);color:var(--warn)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+     padding:7px 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.danger{color:var(--warn)}
+.btn.small{padding:4px 10px;font-size:13px}
+input[type=text],input[type=password],input[type=date],input:not([type]),select,textarea{
+  font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;width:100%}
+textarea{font-family:var(--mono);font-size:13.5px;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(--accent) 40%,transparent);border-color:var(--accent)}
+.form-grid{display:grid;gap:14px}
+.form-grid label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.form-grid .check label{display:inline;color:var(--ink);font-size:14px;margin-left:6px}
+.errorlist{color:var(--warn);font-size:13px;margin:4px 0 0;padding-left:18px}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+table.plain{width:100%;border-collapse:collapse}
+table.plain td,table.plain th{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px}
+table.plain th{font-size:12px;color:var(--muted);font-weight:600}
+table.plain tr:last-child td{border-bottom:0}
+@media (max-width:640px){ header.top{gap:8px 10px} .brand{order:0} .logout{order:1} nav{order:2;flex-basis:100%;margin-left:-10px} }
+{% block style %}{% endblock %}
+</style>
+</head>
+<body>
+<div class="wrap">
+  {% if user.is_authenticated %}
+  <header class="top">
+    <a class="brand" href="{% url 'dashboard' %}"><i></i>客戶待辦</a>
+    {% with u=request.resolver_match.url_name %}
+    <nav>
+      <a href="{% url 'dashboard' %}" class="{% if u == 'dashboard' %}on{% endif %}">待辦</a>
+      <a href="{% url 'paste' %}" class="{% if u == 'paste' or u == 'paste_confirm' %}on{% endif %}">貼上</a>
+      <a href="{% url 'recurring_list' %}" class="{% if 'recurring' in u %}on{% endif %}">每月循環</a>
+      <a href="{% url 'client_list' %}" class="{% if 'client' in u %}on{% endif %}">客戶</a>
+    </nav>
+    {% endwith %}
+    <form class="logout" method="post" action="{% url 'logout' %}">{% csrf_token %}<button>登出</button></form>
+  </header>
+  {% endif %}
+  {% if messages %}<ul class="msgs">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

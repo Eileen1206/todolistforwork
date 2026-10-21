@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>編輯客戶</h1>
+<form method="post" class="form-grid panel" style="padding:18px;max-width:640px">{% csrf_token %}
+  <div>{{ form.name.label_tag }}{{ form.name }}{{ form.name.errors }}</div>
+  <div>{{ form.gcal_color.label_tag }}{{ form.gcal_color }}</div>
+  <div class="check">{{ form.is_active }}{{ form.is_active.label_tag }}</div>
+  <p class="muted" style="font-size:13px;margin:0">改名或改顏色後，日曆上這個客戶的事件會一起更新。</p>
+  <div class="actions"><button class="btn primary">儲存</button><a class="btn" href="{% url 'client_list' %}">取消</a></div>
+</form>
+{% endblock %}

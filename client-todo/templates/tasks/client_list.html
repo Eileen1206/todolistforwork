@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>客戶</h1>
+<p class="muted" style="font-size:14px;margin-top:0">顏色會用在網站標籤和 Google Calendar 事件上。貼上時出現的新客戶會自動加進來。</p>
+{% if clients %}
+<div class="panel" style="margin-bottom:18px"><table class="plain">
+  <tr><th>客戶</th><th>未完成</th><th>狀態</th><th></th></tr>
+  {% for c in clients %}
+  <tr>
+    <td><span class="tag"><span class="dot" style="background:{{ c.hex }}"></span>{{ c.name }}</span></td>
+    <td class="mono">{{ c.open_count }}</td>
+    <td>{% if c.is_active %}使用中{% else %}<span class="muted">停用</span>{% endif %}</td>
+    <td style="text-align:right"><a class="btn small" href="{% url 'client_edit' c.pk %}">編輯</a></td>
+  </tr>
+  {% endfor %}
+</table></div>
+{% endif %}
+<form method="post" class="form-grid panel" style="padding:18px;max-width:640px">{% csrf_token %}
+  <strong style="font-size:14px">新增客戶</strong>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div>{{ form.name.label_tag }}{{ form.name }}{{ form.name.errors }}</div>
+    <div>{{ form.gcal_color.label_tag }}{{ form.gcal_color }}</div>
+  </div>
+  <input type="hidden" name="is_active" value="on">
+  <div class="actions"><button class="btn primary">新增</button></div>
+</form>
+{% endblock %}

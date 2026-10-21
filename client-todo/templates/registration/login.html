@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}登入 · 客戶待辦{% endblock %}
+{% block content %}
+<div style="max-width:360px;margin:12vh auto 0">
+  <div class="brand" style="font-size:18px;margin-bottom:16px"><i style="width:12px;height:12px;border-radius:2px;background:var(--accent);display:inline-block"></i>客戶待辦</div>
+  <form method="post" class="form-grid panel" style="padding:20px">{% csrf_token %}
+    {% if form.errors %}<p style="color:var(--warn);font-size:13px;margin:0">帳號或密碼不對。</p>{% endif %}
+    <div><label for="id_username">帳號</label>{{ form.username }}</div>
+    <div><label for="id_password">密碼</label>{{ form.password }}</div>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="btn primary" style="justify-content:center">登入</button>
+  </form>
+</div>
+{% endblock %}
